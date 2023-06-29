@@ -1,3 +1,20 @@
+export class GithubFetch {
+    static search(username) {
+        const endpoint = `https://api.github.com/users/${username}`
+
+        return fetch(endpoint)
+            .then(response => response.json())
+            .then(({ login, name, public_repos, followers }) => ({
+                login,
+                name,
+                public_repos,
+                followers
+            })
+            )
+    }
+}
+
+//Data
 export class FavouritesData {
     constructor(root) {
         this.root = document.querySelector(root)
@@ -5,8 +22,10 @@ export class FavouritesData {
     }
 
     loadGitHubData() {
+        this.githubUsers = JSON.parse(localStorage.getItem('@github-favourites:')) || []
 
-        this.githubUsers = [
+
+        /* this.githubUsers = [
             {
                 login: "RafaelOkamoto182",
                 name: "Rafael Okamoto",
@@ -19,7 +38,7 @@ export class FavouritesData {
                 public_repos: "333",
                 followers: "444"
             }
-        ]
+        ] */
     }
 
     deleteGitHubUser(user) {
@@ -33,8 +52,15 @@ export class FavouritesData {
         this.update()
     }
 
+    async addGitHubUser(username) {
+        const user = await GithubFetch.search(username)
+
+        console.log(user)
+    }
+
 }
 
+//Visualizaçao e eventos
 export class FavouritesView extends FavouritesData {
     constructor(root) {
         super(root)
@@ -42,13 +68,14 @@ export class FavouritesView extends FavouritesData {
         this.tableBody = this.root.querySelector('table tbody')
 
         this.update()
+        this.onBtnClickAdd()
     }
 
     update() {
         this.removeAllTableRows()
 
         this.githubUsers.forEach((user) => {
-            const tableRow = this.createTableRows()
+            const tableRow = this.createTableRowModel()
             tableRow.querySelector('.user img').src = `https://github.com/${user.login}.png`
             tableRow.querySelector('.user img').alt = `${user.name}'s github profile pricture`
             tableRow.querySelector('.user a').href = `https://github.com/${user.login}`
@@ -81,7 +108,7 @@ export class FavouritesView extends FavouritesData {
             })
     }
 
-    createTableRows() {
+    createTableRowModel() {
 
         const tr = document.createElement('tr')
         tr.innerHTML =
@@ -99,6 +126,16 @@ export class FavouritesView extends FavouritesData {
             </td>`
 
         return tr
+    }
+
+    onBtnClickAdd() {
+        const btnAdd = this.root.querySelector('.search button')
+
+        btnAdd.onclick = () => {
+            const { value } = this.root.querySelector('.search input')
+
+            this.addGitHubUser(value)
+        }
     }
 }
 
