@@ -18,10 +18,10 @@ export class GithubFetch {
 export class FavouritesData {
     constructor(root) {
         this.root = document.querySelector(root)
-        this.loadGitHubData()
+        this.loadLocalStorageData()
     }
 
-    loadGitHubData() {
+    loadLocalStorageData() {
         this.githubUsers = JSON.parse(localStorage.getItem('@github-favourites:')) || []
 
 
@@ -50,12 +50,32 @@ export class FavouritesData {
         //Principio da imutabilidade: nao estamos modificando o githubUsers inicial, estamos apagando todo ele e atribuindo um novo falor, q é o array filtrado  
         this.githubUsers = filteredGitHubUsers
         this.update()
+        this.saveToLocalStorage()
     }
 
     async addGitHubUser(username) {
-        const user = await GithubFetch.search(username)
 
-        console.log(user)
+        try {
+            const user = await GithubFetch.search(username)
+
+            if (user.login === undefined) {
+                throw new Error('Usuário não encontrado')
+            }
+
+            //poderia usar o .push() mas isso quebraria o principio da imutabilidade, entao esse é o jeito mais "correto" de se fazer
+            this.githubUsers = [user, ...this.githubUsers]
+            this.update()
+            this.saveToLocalStorage()
+
+
+        } catch (error) {
+            alert(error.message)
+        }
+
+    }
+
+    saveToLocalStorage() {
+        localStorage.setItem('@github-favourites:', JSON.stringify(this.githubUsers))
     }
 
 }
@@ -68,6 +88,8 @@ export class FavouritesView extends FavouritesData {
         this.tableBody = this.root.querySelector('table tbody')
 
         this.update()
+
+        //isso aqui tem q rodar no começo pq é essa funcao que traz a query pro botao de add
         this.onBtnClickAdd()
     }
 
