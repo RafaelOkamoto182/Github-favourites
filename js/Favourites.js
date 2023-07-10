@@ -56,10 +56,18 @@ export class FavouritesData {
     async addGitHubUser(username) {
 
         try {
+            //filter: percorre os usuarios. Se a função for verdadeira, ele retorna o objeto pra qual a condicao foi verdadeira.
+            const userExists = this.githubUsers.find(user => user.login.toUpperCase() === username.toUpperCase())
+
+            if (userExists) {
+                throw new Error('User already on list')
+            }
+
+
             const user = await GithubFetch.search(username)
 
             if (user.login === undefined) {
-                throw new Error('Usuário não encontrado')
+                throw new Error('User not found')
             }
 
             //poderia usar o .push() mas isso quebraria o principio da imutabilidade, entao esse é o jeito mais "correto" de se fazer
